@@ -1,12 +1,13 @@
 <template>
     <div class="exchange-record">
-        交易记录
+        <exchange-record-table></exchange-record-table>
     </div>
 </template>
 <script>
+import ExchangeRecordTable from './ExchangeRecord/ExchangeRecordTable.vue';
 export default {
     name: 'ExchangeRecord',
-    components: {},
+    components: { ExchangeRecordTable },
     props: {},
     data () {
         return {
@@ -20,4 +21,7 @@ export default {
 };
 </script>
 <style lang="less" scoped>
+.exchange-record {
+    flex: 1;
+}
 </style>

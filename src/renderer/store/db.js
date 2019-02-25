@@ -1,7 +1,7 @@
 import fse from 'fs-extra';
 import path from 'path';
 import sq3 from 'sqlite3';
-import { docDir } from '@utils/settings';
+import { docDir } from '../utils/setting';
 
 export const dbPath = path.join(docDir, 'data.sqlite3');
 fse.ensureFileSync(dbPath);
@@ -17,6 +17,7 @@ db.serialize(() => {
      * unit_price 成交单价（元/股）
      * exchange_number 交易数量（股）
      * exchange_type 交易类别：0-买 1-卖
+     * service_charge 手续费
      * exchange_time 成交时间
      */
     db.run(`CREATE TABLE EXCHANGE_RECORD(
@@ -26,6 +27,7 @@ db.serialize(() => {
         unit_price DECIMAL(15,2) NOT NULL,
         exchange_number INTEGER NOT NULL,
         exchange_type INTEGER NOT NULL,
+        service_charge DECIMAL(15,2) NOT NULL,
         exchange_time INTEGER NOT NULL
     )`, err => {
         console.error(err);
