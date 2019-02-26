@@ -1,6 +1,6 @@
 <template>
     <div id="app" class="app">
-        <el-menu class="app-menu" @select="handleSelect">
+        <el-menu class="app-menu" @select="handleSelect" :default-openeds="['1']">
             <el-submenu index="1">
                 <template slot="title">
                     <i class="el-icon-location"></i>
@@ -29,7 +29,7 @@ export default {
 
 <style lang="less">
 body {
-    font: 14px Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font: 12px Consolas, "Liberation Mono", Menlo, Courier, monospace;
     height: 100vh;
     margin: 0;
 }

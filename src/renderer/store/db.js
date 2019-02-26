@@ -16,11 +16,11 @@ db.serialize(() => {
      * stock_name 股票名称
      * unit_price 成交单价（元/股）
      * exchange_number 交易数量（股）
-     * exchange_type 交易类别：0-买 1-卖
+     * exchange_type 交易类别：1-买 0-卖
      * service_charge 手续费
      * exchange_time 成交时间
      */
-    db.run(`CREATE TABLE EXCHANGE_RECORD(
+    db.run(`CREATE TABLE IF NOT EXISTS EXCHANGE_RECORD(
         id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
         stock_code VARCHAR(30) NOT NULL,
         stock_name VARCHAR(30) NOT NULL,
@@ -30,8 +30,7 @@ db.serialize(() => {
         service_charge DECIMAL(15,2) NOT NULL,
         exchange_time INTEGER NOT NULL
     )`, err => {
-        console.error(err);
+        if (err) console.error(err);
     });
 });
-
 export default db;
