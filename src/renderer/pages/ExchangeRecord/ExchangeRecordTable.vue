@@ -14,7 +14,14 @@
             <el-table-column label="操作" align="center" width="120">
                 <template slot-scope="scope">
                     <el-button type="text" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-                    <el-button type="text" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                    <el-popover width="160" v-model="scope.row.isDeletePopOverVisible">
+                        <p>确认删除第{{scope.$index + 1}}行吗？</p>
+                        <div style="text-align:right;">
+                            <el-button type="text" @click="scope.row.isDeletePopOverVisible = false">取消</el-button>
+                            <el-button type="primary" @click="handleDelete(scope.$index, scope.row)">确定</el-button>
+                        </div>
+                        <el-button type="text" slot="reference">删除</el-button>
+                    </el-popover>
                 </template>
             </el-table-column>
         </el-table>
@@ -130,7 +137,8 @@ export default {
                             unitPrice: item.unit_price,
                             exchangeNumber: item.exchange_number,
                             serviceCharge: item.service_charge,
-                            exchangeTime: item.exchange_time
+                            exchangeTime: item.exchange_time,
+                            isDeletePopOverVisible: false
                         };
                     });
                 }
