@@ -1,5 +1,5 @@
 <template>
-    <div class="create-exchange-record">
+    <div class="edit-exchange-record">
         <el-form label-width="80px" label-position="right" :model="form" ref="form">
             <el-form-item label="交易类别" prop="exchangeType">
                 <el-select v-model="form.exchangeType" class="full-width">
@@ -35,19 +35,20 @@
 </template>
 <script>
 export default {
-    name: 'CreateExchangeRecord',
+    name: 'EditExchangeRecord',
     components: {},
-    props: {},
+    props: {
+        record: Object
+    },
     data () {
-        const today = this.$moment().subtract(2, 'years').startOf('day');
-        console.log(today);
+        this.record = this.record ? this.record : {};
         return {
             form: {
-                exchangeType: this.$consts.EXCHANGE_TYPE.BUY,
-                stockName: '',
-                unitPrice: 0,
-                exchangeNumber: 100,
-                exchangeTime: today
+                exchangeType: this.record.exchangeType,
+                stockName: this.record.stockName,
+                unitPrice: this.record.unitPrice,
+                exchangeNumber: this.record.exchangeNumber,
+                exchangeTime: this.$moment(this.record.exchangeTime)
             },
             stocks: []
         };
@@ -70,17 +71,23 @@ export default {
         /*******************
          * 访问数据库
          *******************/
-        createRecord () {
+        editRecord () {
             const { stockName, unitPrice, exchangeNumber, exchangeType, exchangeTime } = this.form;
-            const sql = `INSERT INTO EXCHANGE_RECORD 
-            (stock_code, stock_name, unit_price, exchange_number, exchange_type, service_charge, exchange_time) VALUES 
-            ('${this.stockCode}', '${stockName}', ${unitPrice}, ${exchangeNumber}, ${exchangeType}, ${this.serviceCharge}, ${this.$moment(exchangeTime).valueOf()})`;
+            const sql = `UPDATE EXCHANGE_RECORD SET
+                stock_code='${this.stockCode}',
+                stock_name='${stockName}',
+                unit_price='${unitPrice}',
+                exchange_number='${exchangeNumber}',
+                exchange_type='${exchangeType}',
+                service_charge='${this.serviceCharge}',
+                exchange_time='${exchangeTime}'
+                WHERE id=${this.record && this.record.id}`;
             this.$db.run(sql, err => {
                 if (err) {
-                    this.$message.error('创建失败');
+                    this.$message.error('更新失败');
                     console.log(err);
                 } else {
-                    this.$message.success('创建成功');
+                    this.$message.success('更新成功');
                     this.$emit('success');
                 }
             });
@@ -109,7 +116,7 @@ export default {
 };
 </script>
 <style lang="less" scoped>
-.create-exchange-record {
+.edit-exchange-record {
     .full-width {
         width: 100%;
     }

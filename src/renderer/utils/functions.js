@@ -1,8 +1,24 @@
 import consts from './consts';
+import moment from 'moment';
 
 // 金额四舍五入到2位小数
 const formatAmount = (amount) => {
     return Math.round(amount * 100) / 100;
+};
+
+// 交易类型exchangeType转label
+const formatExchangeType = (exchangeType) => {
+    switch (exchangeType) {
+    case consts.EXCHANGE_TYPE.SELL: return '卖出';
+    case consts.EXCHANGE_TYPE.BUY: return '买入';
+    default: return '-';
+    }
+};
+
+// 时间戳转日期
+const formateDate = (ts, format = 'YYYY-MM-DD') => {
+    if (!ts) return '-';
+    return moment(ts).format(format);
 };
 
 // 计算手续费
@@ -23,6 +39,8 @@ const computeServiceCharge = (stockAmount, exchangeType) => {
 };
 
 const utils = {
+    formatExchangeType,
+    formateDate,
     computeServiceCharge
 };
 export default utils;

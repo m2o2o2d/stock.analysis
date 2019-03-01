@@ -1,17 +1,21 @@
 <template>
     <div class="c-exchange-record-table">
         <div class="table-btns">
-            <el-button @click="handleRefresh">刷新</el-button>
-            <el-button type="primary" @click="handleCreate">新增</el-button>
-            <el-button type="danger" @click="handleDelete">删除</el-button>
+            <el-button @click="getAllExchangeRecords();">刷新</el-button>
+            <el-button type="primary" @click="isCreateDlgVisible = true;">新增</el-button>
         </div>
-        <el-table :data="data" :row-class-name="rowClassName" max-height="650" @selection-change="handleSelectionChange" border>
-            <el-table-column type="selection" width="50"></el-table-column>
+        <el-table :data="data" :row-class-name="rowClassName" max-height="650" border>
             <el-table-column type="index" width="50"></el-table-column>
             <el-table-column v-for="(item, index) in columns" :key="index"
                 :prop="item.prop"
                 :label="item.label"
                 v-bind="item.props">
+            </el-table-column>
+            <el-table-column label="操作" align="center" width="120">
+                <template slot-scope="scope">
+                    <el-button type="text" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+                    <el-button type="text" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                </template>
             </el-table-column>
         </el-table>
         <el-dialog
@@ -22,16 +26,28 @@
             <create-exchange-record ref="createForm" @success="updateAfterCreate"></create-exchange-record>
             <div class="dialog-footer">
                 <el-button type="primary" @click="handleConfirmCreate">确定</el-button>
-                <el-button @click="handleCancelCreate">取消</el-button>
+                <el-button @click="isCreateDlgVisible = false;">取消</el-button>
+            </div>
+        </el-dialog>
+        <el-dialog
+            title="编辑交易记录"
+            :visible.sync="isEditDlgVisible"
+            width="360px"
+            append-to-body>
+            <edit-exchange-record :record="operatedRow" ref="editForm" @success="updateAfterEdit"></edit-exchange-record>
+            <div class="dialog-footer">
+                <el-button type="primary" @click="handleConfirmEdit">确定</el-button>
+                <el-button @click="isEditDlgVisible = false">取消</el-button>
             </div>
         </el-dialog>
     </div>
 </template>
 <script>
 import CreateExchangeRecord from './CreateExchangeRecord.vue';
+import EditExchangeRecord from './EditExchangeRecord.vue';
 export default {
     name: 'ExchangeRecordTable',
-    components: { CreateExchangeRecord },
+    components: { CreateExchangeRecord, EditExchangeRecord },
     props: {},
     data () {
         const columns = [
@@ -41,13 +57,14 @@ export default {
             { label: '成交单价', prop: 'unitPrice', props: {align: 'right', 'header-align': 'center'} },
             { label: '交易数量', prop: 'exchangeNumber', props: {align: 'right', 'header-align': 'center'} },
             { label: '手续费', prop: 'serviceCharge', props: {align: 'right', 'header-align': 'center'} },
-            { label: '成交时间', prop: 'exchangeTime', props: {align: 'center', formatter: row => this.formateDate(row.exchangeTime)} }
+            { label: '成交时间', prop: 'exchangeTime', props: {align: 'center', width: 120, formatter: row => this.formateDate(row.exchangeTime)} }
         ];
         return {
             data: [],
             columns: columns,
-            selectedRows: [],
-            isCreateDlgVisible: false
+            operatedRow: null,
+            isCreateDlgVisible: false,
+            isEditDlgVisible: false
         };
     },
     computed: {},
@@ -60,17 +77,10 @@ export default {
     },
     methods: {
         formatExchangeType (row) {
-            if (row) {
-                switch (row.exchangeType) {
-                case this.$consts.EXCHANGE_TYPE.SELL: return '卖出';
-                case this.$consts.EXCHANGE_TYPE.BUY: return '买入';
-                }
-            }
-            return '-';
+            return this.$utils.formatExchangeType(row.exchangeType);
         },
-        formateDate (ts, format = 'YYYY-MM-DD') {
-            if (!ts) return '-';
-            return this.$moment(ts).format(format);
+        formateDate (ts) {
+            return this.$utils.formateDate(ts);
         },
         rowClassName (row, index) {
             if (row && row.exchangeType === this.$consts.EXCHANGE_TYPE.SELL) {
@@ -78,31 +88,28 @@ export default {
             }
             return '';
         },
-        handleSelectionChange (rows) {
-            this.selectedRows = rows;
+        handleEdit (index, row) {
+            this.operatedRow = row;
+            this.isEditDlgVisible = true;
         },
-        handleRefresh () {
-            this.getAllExchangeRecords();
-        },
-        handleCreate () {
-            this.isCreateDlgVisible = true;
-        },
-        handleDelete () {
-            if (this.selectedRows && this.selectedRows.length) {
-                this.deleteExchangeRecords(this.selectedRows);
-            }
+        handleDelete (index, row) {
+            this.deleteExchangeRecord(row);
         },
         handleConfirmCreate () {
             this.$refs.createForm && this.$refs.createForm.createRecord();
         },
-        handleCancelCreate () {
-            this.isCreateDlgVisible = false;
+        handleConfirmEdit () {
+            this.$refs.editForm && this.$refs.editForm.editRecord();
         },
         resetCreateForm () {
             this.$refs.createForm && this.$refs.createForm.reset();
         },
         updateAfterCreate () {
             this.isCreateDlgVisible = false;
+            this.getAllExchangeRecords();
+        },
+        updateAfterEdit () {
+            this.isEditDlgVisible = false;
             this.getAllExchangeRecords();
         },
         /*******************
@@ -129,22 +136,17 @@ export default {
                 }
             });
         },
-        deleteExchangeRecords (rows) {
-            if (rows && rows.length) {
-                let sql = '';
-                rows.forEach(item => {
-                    sql = sql + `DELETE FROM EXCHANGE_RECORD WHERE ID = ${rows.id}`;
-                });
-                this.$db.run(sql, err => {
-                    if (err) {
-                        this.$message.error('删除失败');
-                        console.log(err);
-                    } else {
-                        this.$message.success('删除成功');
-                        this.getAllExchangeRecords();
-                    }
-                });
-            }
+        deleteExchangeRecord (row) {
+            const sql = `DELETE FROM EXCHANGE_RECORD WHERE ID = ${row.id}`;
+            this.$db.run(sql, err => {
+                if (err) {
+                    this.$message.error('删除失败');
+                    console.log(err);
+                } else {
+                    this.$message.success('删除成功');
+                    this.getAllExchangeRecords();
+                }
+            });
         }
     },
     created () {
