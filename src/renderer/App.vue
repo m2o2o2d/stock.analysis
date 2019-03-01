@@ -10,7 +10,7 @@
                 <el-menu-item index="1-2">转账记录</el-menu-item>
             </el-submenu>
         </el-menu>
-        <router-view></router-view>
+        <router-view class="app-content"></router-view>
     </div>
 </template>
 
@@ -28,17 +28,15 @@ export default {
 </script>
 
 <style lang="less">
-body {
-    font: 12px Consolas, "Liberation Mono", Menlo, Courier, monospace;
-    height: 100vh;
-    margin: 0;
-}
 .app {
     display: flex;
     height: 100%;
     &-menu {
         width: 200px;
         height: 100%;
+    }
+    &-content {
+        padding: 10px;
     }
 }
 </style>
