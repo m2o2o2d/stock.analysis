@@ -21,6 +21,7 @@ module.exports = {
 		'no-new': [0], // 不允许new一个实例后不赋值或不比较
 		'camelcase': [0, { 'properties': 'never' }], // 关闭驼峰命名规则
 		'generator-star-spacing': 0, // allow async-await
-		'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0 // allow debugger during development
+		'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0, // allow debugger during development
+		'padded-blocks': 0
 	}
 }

@@ -5,9 +5,11 @@ import axios from 'axios';
 import moment from 'moment';
 
 import './styles/base.less';
+import './styles/element.less';
 import App from './App';
 import router from './router';
-import db from './store/db/db';
+import db from './store/db/sql/db';
+import models from './store/db/model/models';
 import consts from './utils/consts';
 import utils from './utils/functions';
 
@@ -17,6 +19,7 @@ Vue.config.productionTip = false;
 
 Vue.use(ElementUI, { size: 'mini' });
 
+Vue.prototype.$models = models;
 Vue.prototype.$db = db;
 Vue.prototype.$consts = consts;
 Vue.prototype.$utils = utils;

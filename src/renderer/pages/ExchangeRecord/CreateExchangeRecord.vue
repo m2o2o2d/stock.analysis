@@ -59,7 +59,7 @@ export default {
         },
         serviceCharge () {
             const { exchangeType, unitPrice, exchangeNumber } = this.form;
-            return this.$utils.computeServiceCharge(unitPrice * exchangeNumber, exchangeType);
+            return this.$utils.computeServiceCharge(unitPrice * exchangeNumber, exchangeType, this.stockCode);
         }
     },
     watch: {},
@@ -72,10 +72,16 @@ export default {
          *******************/
         createRecord () {
             const { stockName, unitPrice, exchangeNumber, exchangeType, exchangeTime } = this.form;
-            const sql = `INSERT INTO EXCHANGE_RECORD 
-            (stock_code, stock_name, unit_price, exchange_number, exchange_type, service_charge, exchange_time) VALUES 
-            ('${this.stockCode}', '${stockName}', ${unitPrice}, ${exchangeNumber}, ${exchangeType}, ${this.serviceCharge}, ${this.$moment(exchangeTime).valueOf()})`;
-            this.$db.run(sql, err => {
+            const record = {
+                stockCode: this.stockCode,
+                stockName: stockName,
+                unitPrice: unitPrice,
+                exchangeNumber: exchangeNumber,
+                exchangeType: exchangeType,
+                serviceCharge: this.serviceCharge,
+                exchangeTime: this.$moment(exchangeTime).valueOf()
+            };
+            this.$models.ExchangeRecord.create(record, (err, data) => {
                 if (err) {
                     this.$message.error('创建失败');
                     console.log(err);
@@ -86,8 +92,7 @@ export default {
             });
         },
         getAllStocks () {
-            const sql = `SELECT * FROM STOCK`;
-            this.$db.all(sql, (err, rows) => {
+            this.$models.Stock.all((err, rows) => {
                 if (err) {
                     console.log('搜索失败：' + err);
                 } else {

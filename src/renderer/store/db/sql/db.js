@@ -1,8 +1,8 @@
 import fse from 'fs-extra';
 import path from 'path';
 import sq3 from 'sqlite3';
-import { docDir } from '../../utils/setting';
-import { EXCHANGE_RECORD, STOCK } from './sql/createTable';
+import { docDir } from '../../../utils/setting';
+import { EXCHANGE_RECORD, STOCK } from './createTable';
 
 export const dbPath = path.join(docDir, 'data.sqlite3');
 fse.ensureFileSync(dbPath);

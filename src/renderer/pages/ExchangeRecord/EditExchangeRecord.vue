@@ -13,7 +13,6 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="股票代码" prop="stockCode">
-                <!-- <el-input v-model.trim="form.stockCode" clearable></el-input> -->
                 {{stockCode}}
             </el-form-item>
             <el-form-item label="成交单价" prop="unitPrice">
@@ -23,8 +22,6 @@
                 <el-input-number v-model="form.exchangeNumber" :precision="0" :step="100"></el-input-number> 股
             </el-form-item>
             <el-form-item label="手续费" prop="serviceCharge">
-                <!-- <el-input-number v-model="form.serviceCharge" :precision="2" :controls="false"></el-input-number> 元
-                <el-button type="text" @click="computeServiceCharge">计算</el-button> -->
                 {{serviceCharge}}
             </el-form-item>
             <el-form-item label="成交时间" prop="exchangeTime">
@@ -41,14 +38,13 @@ export default {
         record: Object
     },
     data () {
-        this.record = this.record ? this.record : {};
         return {
             form: {
-                exchangeType: this.record.exchangeType,
-                stockName: this.record.stockName,
-                unitPrice: this.record.unitPrice,
-                exchangeNumber: this.record.exchangeNumber,
-                exchangeTime: this.$moment(this.record.exchangeTime)
+                exchangeType: this.$consts.EXCHANGE_TYPE.BUY,
+                stockName: '',
+                unitPrice: '',
+                exchangeNumber: 100,
+                exchangeTime: 0
             },
             stocks: []
         };
@@ -60,10 +56,23 @@ export default {
         },
         serviceCharge () {
             const { exchangeType, unitPrice, exchangeNumber } = this.form;
-            return this.$utils.computeServiceCharge(unitPrice * exchangeNumber, exchangeType);
+            return this.$utils.computeServiceCharge(unitPrice * exchangeNumber, exchangeType, this.stockCode);
         }
     },
-    watch: {},
+    watch: {
+        record: {
+            immediate: true,
+            handler: function (newValue) {
+                if (newValue) {
+                    this.form.exchangeType = newValue.exchangeType;
+                    this.form.stockName = newValue.stockName;
+                    this.form.unitPrice = newValue.unitPrice;
+                    this.form.exchangeNumber = newValue.exchangeNumber;
+                    this.form.exchangeTime = this.$moment(newValue.exchangeNumber);
+                }
+            }
+        }
+    },
     methods: {
         reset () {
             this.$refs.form && this.$refs.form.resetFields();
@@ -73,16 +82,17 @@ export default {
          *******************/
         editRecord () {
             const { stockName, unitPrice, exchangeNumber, exchangeType, exchangeTime } = this.form;
-            const sql = `UPDATE EXCHANGE_RECORD SET
-                stock_code='${this.stockCode}',
-                stock_name='${stockName}',
-                unit_price='${unitPrice}',
-                exchange_number='${exchangeNumber}',
-                exchange_type='${exchangeType}',
-                service_charge='${this.serviceCharge}',
-                exchange_time='${exchangeTime}'
-                WHERE id=${this.record && this.record.id}`;
-            this.$db.run(sql, err => {
+            const record = {
+                id: this.record && this.record.id,
+                stockCode: this.stockCode,
+                stockName: stockName,
+                unitPrice: unitPrice,
+                exchangeNumber: exchangeNumber,
+                exchangeType: exchangeType,
+                serviceCharge: this.serviceCharge,
+                exchangeTime: this.$moment(exchangeTime).valueOf()
+            };
+            this.$models.ExchangeRecord.update(record, err => {
                 if (err) {
                     this.$message.error('更新失败');
                     console.log(err);
@@ -93,8 +103,7 @@ export default {
             });
         },
         getAllStocks () {
-            const sql = `SELECT * FROM STOCK`;
-            this.$db.all(sql, (err, rows) => {
+            this.$models.Stock.all((err, rows) => {
                 if (err) {
                     console.log('搜索失败：' + err);
                 } else {

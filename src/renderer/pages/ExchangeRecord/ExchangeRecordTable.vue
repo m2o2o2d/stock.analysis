@@ -3,8 +3,15 @@
         <div class="table-btns">
             <el-button @click="getAllExchangeRecords();">刷新</el-button>
             <el-button type="primary" @click="isCreateDlgVisible = true;">新增</el-button>
+            <el-button @click="$refs.uploadFile.value = null;$refs.uploadFile.click()">导入</el-button>
+            <input
+                type="file"
+                accept="application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                ref="uploadFile"
+                hidden="hidden" 
+                @change="handleExcelImport">
         </div>
-        <el-table :data="data" :row-class-name="rowClassName" max-height="650" border>
+        <el-table :data="data" :row-class-name="rowClassName" max-height="550" border>
             <el-table-column type="index" width="50"></el-table-column>
             <el-table-column v-for="(item, index) in columns" :key="index"
                 :prop="item.prop"
@@ -80,6 +87,12 @@ export default {
             if (!newValue) {
                 // this.resetCreateForm();
             }
+        },
+        isEditDlgVisible (newValue) {
+            if (!newValue) {
+                this.operatedRow = null;
+                this.resetEditForm();
+            }
         }
     },
     methods: {
@@ -89,7 +102,7 @@ export default {
         formateDate (ts) {
             return this.$utils.formateDate(ts);
         },
-        rowClassName (row, index) {
+        rowClassName ({row, index}) {
             if (row && row.exchangeType === this.$consts.EXCHANGE_TYPE.SELL) {
                 return 'success-row';
             }
@@ -108,8 +121,18 @@ export default {
         handleConfirmEdit () {
             this.$refs.editForm && this.$refs.editForm.editRecord();
         },
+        handleExcelImport (e) {
+            const files = e.target.files;
+            const file = files && files[0];
+            this.$utils.readExcel(file).then(rows => {
+                console.log(rows);
+            });
+        },
         resetCreateForm () {
             this.$refs.createForm && this.$refs.createForm.reset();
+        },
+        resetEditForm () {
+            this.$refs.editForm && this.$refs.editForm.reset();
         },
         updateAfterCreate () {
             this.isCreateDlgVisible = false;
@@ -123,8 +146,7 @@ export default {
          * 访问数据库
          *******************/
         getAllExchangeRecords () {
-            const sql = 'SELECT * FROM EXCHANGE_RECORD';
-            this.$db.all(sql, (err, rows) => {
+            this.$models.ExchangeRecord.all((err, rows) => {
                 if (err) {
                     console.log('搜索失败：' + err);
                 } else {
@@ -145,8 +167,7 @@ export default {
             });
         },
         deleteExchangeRecord (row) {
-            const sql = `DELETE FROM EXCHANGE_RECORD WHERE ID = ${row.id}`;
-            this.$db.run(sql, err => {
+            this.$models.ExchangeRecord.delete(row.id, err => {
                 if (err) {
                     this.$message.error('删除失败');
                     console.log(err);

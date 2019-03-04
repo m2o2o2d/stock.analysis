@@ -33,7 +33,6 @@ export default {
     height: 100%;
     &-menu {
         width: 200px;
-        height: 100%;
     }
     &-content {
         padding: 10px;
